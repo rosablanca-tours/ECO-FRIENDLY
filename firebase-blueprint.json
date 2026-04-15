@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "Accommodation": {
+      "title": "Accommodation",
+      "description": "A sustainable accommodation verified under COVENIN 2030 standards.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the accommodation" },
+        "location": { "type": "string", "description": "City or region" },
+        "type": { "type": "string", "description": "Type of accommodation (Playa, Montaña, etc.)" },
+        "ecoScore": { "type": "number", "description": "Sustainability score from 0 to 10" },
+        "price": { "type": "number", "description": "Price per night in USD" },
+        "certification": { "type": "string", "description": "Certifying body" },
+        "mission": { "type": "string", "description": "Gamified mission for the user" },
+        "imageUrl": { "type": "string", "description": "URL of the accommodation image" },
+        "hostId": { "type": "string", "description": "UID of the host who owns this property" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "Publication status" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "location", "type", "ecoScore", "price", "certification", "mission", "hostId", "status"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A reservation made by a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user who made the booking" },
+        "accommodationId": { "type": "string", "description": "ID of the accommodation" },
+        "accommodationName": { "type": "string", "description": "Name of the accommodation at the time of booking" },
+        "date": { "type": "string", "format": "date-time", "description": "Date of the reservation" },
+        "nights": { "type": "number", "description": "Number of nights" },
+        "guests": {
+          "type": "object",
+          "properties": {
+            "adults": { "type": "number" },
+            "children": { "type": "number" },
+            "seniors": { "type": "number" }
+          }
+        },
+        "totalAmount": { "type": "number", "description": "Total price paid" },
+        "commission": { "type": "number", "description": "10% commission" },
+        "donationAmount": { "type": "number", "description": "5% of commission donated" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] }
+      },
+      "required": ["userId", "accommodationId", "date", "nights", "guests", "totalAmount", "commission", "donationAmount", "status"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "isPremium": { "type": "boolean" },
+        "ecoPoints": { "type": "number" },
+        "role": { "type": "string", "enum": ["visitor", "host", "admin"] }
+      },
+      "required": ["uid", "displayName", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/accommodations/{accommodationId}": {
+      "schema": "Accommodation",
+      "description": "Collection of sustainable accommodations."
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Collection of user bookings."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and settings."
+    }
+  }
+}

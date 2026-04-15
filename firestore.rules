@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: accommodations
+    // Fields:
+    //   - name: string (required)
+    //   - location: string (required)
+    //   - type: string (required)
+    //   - ecoScore: number (required, 0-10)
+    //   - price: number (required, >0)
+    //   - certification: string (required)
+    //   - mission: string (required)
+    //   - imageUrl: string (optional)
+    //   - isPremium: bool (optional)
+    //
+    // Collection: bookings
+    // Fields:
+    //   - userId: string (required, matches auth.uid)
+    //   - accommodationId: string (required)
+    //   - accommodationName: string (required)
+    //   - date: string (required, ISO 8601)
+    //   - totalAmount: number (required, >0)
+    //   - commission: number (required, 10% of total)
+    //   - donationAmount: number (required, 5% of commission)
+    //   - status: string (required, enum: pending, confirmed, cancelled)
+    //
+    // Collection: users
+    // Fields:
+    //   - displayName: string (required)
+    //   - email: string (required, email format)
+    //   - photoURL: string (optional)
+    //   - isPremium: bool (optional)
+    //   - ecoPoints: number (optional, >=0)
+    //   - role: string (optional, enum: visitor, host)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "mariangelblanco4@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidAccommodation(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.location is string && data.location.size() > 0 &&
+             data.type is string &&
+             data.ecoScore is number && data.ecoScore >= 0 && data.ecoScore <= 10 &&
+             data.price is number && data.price > 0 &&
+             data.certification is string &&
+             data.mission is string &&
+             data.hostId == request.auth.uid &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    function isValidBooking(data) {
+      return data.userId == request.auth.uid &&
+             data.accommodationId is string &&
+             data.accommodationName is string &&
+             isValidDateString(data.date) &&
+             data.nights is number && data.nights > 0 &&
+             data.guests is map &&
+             data.guests.adults is number && data.guests.adults >= 0 &&
+             data.guests.children is number && data.guests.children >= 0 &&
+             data.guests.seniors is number && data.guests.seniors >= 0 &&
+             data.totalAmount is number && data.totalAmount > 0 &&
+             data.commission is number &&
+             data.donationAmount is number &&
+             data.status in ['pending', 'confirmed', 'cancelled'];
+    }
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.displayName is string && data.displayName.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.role in ['visitor', 'host', 'admin'];
+    }
+
+    function isHost() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'host';
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /accommodations/{accommodationId} {
+      allow read: if true; 
+      allow create: if isHost() && isValidAccommodation(request.resource.data);
+      allow update: if (isHost() && resource.data.hostId == request.auth.uid && isValidAccommodation(request.resource.data)) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidBooking(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidBooking(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin()) && isValidUser(request.resource.data);
+    }
+  }
+}

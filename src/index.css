@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  
+  --color-primary: #2D6A4F;
+  --color-secondary: #52B788;
+  --color-accent: #FF9F1C;
+  --color-bg: #F0F4F0;
+  --color-card: #FFFFFF;
+  --color-text: #1B4332;
+  --color-muted: #748B81;
+  --color-premium: #7209B7;
+
+  --breakpoint-xs: 450px;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans;
+  }
+}
+
+.top-bar {
+  @apply border-b-2 border-[#E0EADD] px-4 sm:px-10 py-2.5 sm:py-5 flex justify-between items-center;
+}
+
+.user-badge {
+  @apply flex items-center gap-3 bg-[#E9F5EA] px-4 py-1.5 rounded-full border border-secondary;
+}
+
+.premium-tag {
+  @apply bg-premium text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase;
+}
+
+.eco-card {
+  @apply bg-card rounded-xl sm:rounded-[20px] overflow-hidden shadow-[0_8px_24px_rgba(45,106,79,0.08)] border border-[#EBF2EB] flex flex-col;
+}
+
+.eco-score-badge {
+  @apply absolute top-2 right-2 sm:top-3 sm:right-3 bg-accent text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-bold text-base sm:text-lg shadow-[0_4px_8px_rgba(0,0,0,0.1)];
+}
+
+.impact-box {
+  @apply bg-[#F8FAF8] border-l-3 border-secondary p-2 text-xs mb-3;
+}
+
+.task-btn {
+  @apply w-full p-2.5 border-none bg-[#E9F5EA] text-primary rounded-xl font-semibold text-xs flex justify-between items-center transition-colors hover:bg-secondary/10;
+}
+
+.main-btn {
+  @apply bg-primary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold shadow-[0_10px_20px_rgba(45,106,79,0.3)] border-none flex items-center gap-2.5 transition-transform active:scale-95;
+}
+
+.voice-btn-vibrant {
+  @apply w-16 h-16 rounded-full bg-accent border-none text-white grid place-items-center shadow-[0_10px_20px_rgba(255,159,28,0.3)] transition-transform active:scale-95;
+}
+
+.impact-stats-container {
+  @apply bg-white rounded-2xl sm:rounded-[24px] p-4 sm:p-6 flex items-center justify-around shadow-sm;
+}
+
